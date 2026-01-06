@@ -211,7 +211,7 @@ def _add_routes(app: FastAPI, settings) -> None:
     app.include_router(create_i18n_router(), prefix=API_PREFIX)
 
     # Include system router
-    app.include_router(create_system_router(settings), prefix=API_PREFIX, tags=["System"])
+    app.include_router(create_system_router(), prefix=API_PREFIX, tags=["System"])
 
     # Include models router
     app.include_router(create_models_router(), prefix=API_PREFIX)

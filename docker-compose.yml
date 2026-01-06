@@ -2,9 +2,7 @@ version: '3.8'
 
 services:
   valuecell:
-    build:
-      context: .
-      dockerfile: docker/DockerFile
+    image: zcleexx/valuecell:latest
     container_name: valuecell
     restart: always
     ports:
