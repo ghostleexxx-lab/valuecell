@@ -12,5 +12,7 @@ services:
       - ./.env:/root/.config/valuecell/.env
       - ./data:/app/data
     environment:
-      - API_HOST=0.0.0.0
+      - API_HOST=69.63.216.212
+      - API_PORT=9000
+      - VITE_API_BASE_URL=http://69.63.216.212:9000
       - DISABLE_STDIN_CONTROL=true
