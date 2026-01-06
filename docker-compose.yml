@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  valuecell:
+    build:
+      context: .
+      dockerfile: docker/DockerFile
+    container_name: valuecell
+    restart: always
+    ports:
+      - "9000:8000"
+      - "8081:1420"
+    volumes:
+      - ./.env:/root/.config/valuecell/.env
+      - ./data:/app/data
+    environment:
+      - API_HOST=0.0.0.0
+      - DISABLE_STDIN_CONTROL=true

@@ -71,9 +71,10 @@ def main() -> None:
     # stdin wrapper (e.g. PyCharm debug) can cause attribute errors when
     # iterating over `sys.stdin`. Skip creating the control thread in that
     # environment to avoid crashing the background thread.
-    if os.getenv("ENV") == "local_dev":
+    # Also skip in Docker/Production environments where stdin might be closed.
+    if os.getenv("ENV") == "local_dev" or os.getenv("DISABLE_STDIN_CONTROL") == "true":
         logger.info(
-            "ENV=local_dev detected: skipping stdin control thread (IDE debug mode)"
+            "Stdin control thread disabled by configuration"
         )
         control_thread = None
     else:

@@ -5,6 +5,8 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
@@ -190,16 +192,15 @@ API_PREFIX = "/api/v1"
 def _add_routes(app: FastAPI, settings) -> None:
     """Add routes to the application."""
 
-    # Root endpoint
-    @app.get("/", response_model=SuccessResponse[AppInfoData])
-    async def home_page():
+    # API Info endpoint
+    @app.get(API_PREFIX, response_model=SuccessResponse[AppInfoData])
+    async def api_info():
         return SuccessResponse.create(
             data=AppInfoData(
                 name=settings.APP_NAME,
                 version=settings.APP_VERSION,
                 environment=settings.APP_ENVIRONMENT,
-            ),
-            msg="Welcome to ValueCell Server API",
+            )
         )
 
     @app.get(f"{API_PREFIX}/healthz", response_model=SuccessResponse)
@@ -210,7 +211,7 @@ def _add_routes(app: FastAPI, settings) -> None:
     app.include_router(create_i18n_router(), prefix=API_PREFIX)
 
     # Include system router
-    app.include_router(create_system_router(), prefix=API_PREFIX)
+    app.include_router(create_system_router(settings), prefix=API_PREFIX, tags=["System"])
 
     # Include models router
     app.include_router(create_models_router(), prefix=API_PREFIX)
@@ -235,6 +236,32 @@ def _add_routes(app: FastAPI, settings) -> None:
 
     # Include task router
     app.include_router(create_task_router(), prefix=API_PREFIX)
+
+    # Static files (Frontend)
+    static_dir = Path("/app/static")
+    if static_dir.exists():
+        # Mount assets if they exist
+        if (static_dir / "assets").exists():
+            app.mount("/assets", StaticFiles(directory=static_dir / "assets"), name="assets")
+        
+        # Catch-all for SPA
+        @app.get("/{full_path:path}")
+        async def serve_spa(full_path: str):
+            file_path = static_dir / full_path
+            if file_path.exists() and file_path.is_file():
+                return FileResponse(file_path)
+            return FileResponse(static_dir / "index.html")
+    else:
+        # Fallback if no frontend built
+        @app.get("/", response_model=SuccessResponse[AppInfoData])
+        async def home_page():
+            return SuccessResponse.create(
+                data=AppInfoData(
+                    name=settings.APP_NAME,
+                    version=settings.APP_VERSION,
+                    environment=settings.APP_ENVIRONMENT,
+                )
+            )
 
 
 # For uvicorn
